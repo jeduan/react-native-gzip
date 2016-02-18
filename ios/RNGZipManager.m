@@ -1,31 +1,46 @@
 #import "RNGZipManager.h"
 
+@interface RNGZipManager ()
+
+@end
+
 @implementation RNGZipManager
 
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(gunzip,
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
+                 filePath: (NSString *) source
+                 toFolder: (NSString *) folder
+                 force: (BOOL) force
+                 resolver: (RCTPromiseResolveBlock)resolve
+                 rejecter: (RCTPromiseRejectBlock)reject)
 {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *destinationFolder = [paths firstObject];
-    RCTLogInfo(@"Destination folder: %@", destinationFolder);
+    NSFileManager *manager = [NSFileManager defaultManager];
 
-    NSURL *url = [[NSBundle mainBundle] URLForResource:@"foo" withExtension:@"tgz"];
-    NSURL *tarPath = [NSURL URLWithString:[destinationFolder stringByAppendingString:@"/temp.tar"]];
-
-    NSError *err;
-    if (![fileManager GZipDecompressFile:url writingContentsToFile:tarPath error:&err]) {
-        reject(@"gzip", @"error on decompression", err);
+    if (![manager fileExistsAtPath:source]) {
+        reject(@"-2", @"file not found", nil);
         return;
     }
-    if (![DCTar decompressFileAtPath:[tarPath absoluteString] toPath:destinationFolder error:&err]) {
-        reject(@"untar", @"error on untar", err);
+
+    if ([manager fileExistsAtPath:folder]) {
+        if (!force) {
+            reject(@"-2", @"folder exists", nil);
+            return;
+        }
+        NSError *unlinkError;
+        if (![manager removeItemAtPath:folder error:&unlinkError]) {
+            reject([@(unlinkError.code) stringValue], unlinkError.localizedDescription, unlinkError);
+            return;
+        }
+    }
+
+    // TODO Passing an error here results in EXC_BAD_ACCESS because the error is released
+    if (![DCTar decompressData:[manager contentsAtPath:source] toPath:folder error:nil]) {
+        reject(@"-3", @"error while decompressing", nil);
         return;
     }
-    resolve(@{@"path": destinationFolder});
+
+    resolve(@{@"path": folder});
 }
 
 @end
