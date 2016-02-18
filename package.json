@@ -1,7 +1,7 @@
 {
   "name": "react-native-gzip",
   "description": "Decompression for react-native",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "GZip.common.js",
   "keywords": [
     "react-native",
