@@ -24,9 +24,21 @@ project.xcworkspace
 
 # Android/IJ
 #
-.idea
-.gradle
+*.apk
+*.ap_
+*.class
+bin/
+gen/
+out/
+.gradle/
+build/
 local.properties
+proguard/
+*.log
+.navigation/
+captures/
+*.iml
+.idea/
 
 # node.js
 #
